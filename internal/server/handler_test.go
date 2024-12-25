@@ -15,7 +15,7 @@ func TestHelloHandler(t *testing.T) {
 	res := httptest.NewRecorder()
 
 	t.Run("prints hello msg", func(t *testing.T) {
-		helloHandler(res, req)
+		elloHandler(res, req)
 
 		got := res.Body.String()
 		want := "Hello, World!\n"

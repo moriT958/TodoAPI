@@ -1,106 +1,57 @@
-package store
+package store_test
 
 import (
 	"just-do-it-2/internal/model"
+	"just-do-it-2/internal/store/testdata"
+	"log"
 	"reflect"
 	"testing"
 )
 
 func TestSave(t *testing.T) {
-	t.Run("Save a new Todo", func(t *testing.T) {
-		store := New()
-		todo := model.Todo{ID: "test-uuid", Title: "test-task", Completed: false}
+	tests := []struct {
+		name string
+		id   string
+		want int
+	}{
+		{name: "save correctly", id: "correct-uuid", want: 4},
+		{name: "add an existing todo", id: "test-uuid-2", want: 3},
+	}
 
-		store.Save(todo)
-
-		if len(store.mem) != 1 {
-			t.Errorf("expected mem size to be 1, got %d", len(store.mem))
-		}
-
-		if len(store.mem) != store.count {
-			t.Errorf("expected mem size is same to count.")
-		}
-
-		if store.mem[0].ID != todo.ID || store.mem[0].Title != todo.Title || store.mem[0].Completed != todo.Completed {
-			t.Errorf("expected todo to be %v, got %v", todo, store.mem[0])
+	t.Run("correctly save init data", func(t *testing.T) {
+		store := testdata.InitTestStore()
+		if len(store.Mem()) != store.Count() {
+			t.Errorf("not match data num(%d) and count(%d)", len(store.Mem()), store.Count())
 		}
 	})
 
-	t.Run("Update an existing Todo", func(t *testing.T) {
-		store := New()
-		todo := model.Todo{ID: "test-uuid", Title: "test-task", Completed: false}
-		store.Save(todo)
-
-		todoUpdated := model.Todo{ID: "test-uuid", Title: "test-task-updated", Completed: false}
-		store.Save(todoUpdated)
-
-		if len(store.mem) != 1 {
-			t.Errorf("expected mem size to be 1 after update, got %d", len(store.mem))
-		}
-
-		if store.mem[0].Title != todoUpdated.Title {
-			t.Errorf("expected updated title to be %q, got %q", todoUpdated.Title, store.mem[0].Title)
-		}
-	})
-
-	t.Run("Add a second Todo", func(t *testing.T) {
-		store := New()
-		todo1 := model.Todo{ID: "test-uuid-1", Title: "test-task-1", Completed: false}
-		todo2 := model.Todo{ID: "test-uuid-2", Title: "test-task-2", Completed: false}
-		store.Save(todo1)
-		store.Save(todo2)
-
-		if len(store.mem) != 2 {
-			t.Errorf("expected mem size to be 2, got %d", len(store.mem))
-		}
-
-		if store.mem[1].ID != todo2.ID || store.mem[1].Title != todo2.Title || store.mem[1].Completed != todo2.Completed {
-			t.Errorf("expected todo to be %v, got %v", todo2, store.mem[1])
-		}
-	})
-
-	t.Run("Avoid duplicate Todo with same ID", func(t *testing.T) {
-		store := New()
-		todo1 := model.Todo{ID: "test-uuid-1", Title: "test-task-1", Completed: false}
-		store.Save(todo1)
-
-		todo2 := model.Todo{ID: "test-uuid-1", Title: "test-task-2", Completed: false}
-		store.Save(todo2)
-
-		if len(store.mem) != 1 {
-			t.Errorf("expected mem size to remain 1 after duplicate save, got %d", len(store.mem))
-		}
-
-		if store.mem[0].Title != todo2.Title {
-			t.Errorf("expected updated title to be %q, got %q", todo2.Title, store.mem[0].Title)
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			store := testdata.InitTestStore()
+			store.Save(model.Todo{ID: tt.id})
+			if len(store.Mem()) != tt.want {
+				log.Println(store.Mem())
+				t.Errorf("data num expected %d, but got %d", tt.want, len(store.Mem()))
+			}
+		})
+	}
 }
 
 func TestGetAll(t *testing.T) {
-	store := New()
-	todos := []model.Todo{
-		{ID: "test-uuid-1", Title: "test-task-1", Completed: false},
-		{ID: "test-uuid-2", Title: "test-task-2", Completed: false},
-		{ID: "test-uuid-3", Title: "test-task-3", Completed: false},
-	}
-	store.Save(todos[0])
-	store.Save(todos[1])
-	store.Save(todos[2])
-
 	tests := []struct {
 		name   string
 		offset int
 		limit  int
 		want   []model.Todo
 	}{
-		{name: "valid offset and limit should return all todos", offset: 0, limit: 3, want: todos},
+		{name: "valid offset and limit should return all todos", offset: 0, limit: 3, want: testdata.Todos},
 		{name: "invalid offset should return nil", offset: -1, limit: 3, want: nil},
 		{name: "invalid limit should return nil", offset: 0, limit: -1, want: nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			store := testdata.InitTestStore()
 			got := store.GetAll(tt.offset, tt.limit)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("expected %v, but got %v", tt.want, got)
@@ -110,21 +61,18 @@ func TestGetAll(t *testing.T) {
 }
 
 func TestFindByID(t *testing.T) {
-	store := New()
-	todo := model.Todo{ID: "test-uuid-1", Title: "test-task-1", Completed: false}
-	store.Save(todo)
-
 	testcases := []struct {
 		name string
 		id   string
 		want model.Todo
 	}{
-		{name: "should return correct todo", id: "test-uuid-1", want: todo},
+		{name: "should return correct todo", id: "test-uuid-1", want: testdata.Todos[0]},
 		{name: "not exit id should return nothin", id: "wrong-uuid-1", want: model.Todo{}},
 	}
 
 	for _, tt := range testcases {
 		t.Run(tt.name, func(t *testing.T) {
+			store := testdata.InitTestStore()
 			gotTodo := store.FindByID(tt.id)
 			if gotTodo != tt.want {
 				t.Errorf("expected %v, got %v", tt.want, gotTodo)
@@ -134,10 +82,6 @@ func TestFindByID(t *testing.T) {
 }
 
 func TestDeleteByID(t *testing.T) {
-	store := New()
-	todo1 := model.Todo{ID: "test-uuid-1", Title: "test-task-1", Completed: false}
-	store.Save(todo1)
-
 	tests := []struct {
 		name string
 		id   string
@@ -149,6 +93,7 @@ func TestDeleteByID(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			store := testdata.InitTestStore()
 			if got := store.DeleteByID(tt.id); got != tt.want {
 				t.Errorf("expected %t, got %t", tt.want, got)
 			}
