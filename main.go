@@ -1,20 +1,28 @@
 package main
 
 import (
-	"just-do-it/config"
-	"just-do-it/logger"
+	"just-do-it-2/config"
+	"just-do-it-2/internal/server"
+	"just-do-it-2/internal/todo"
 	"log"
+	"log/slog"
+	"os"
 )
 
-func main() {
-	logger.InitLogger()
+func init() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+}
 
-	if err := config.InitConfig("config.json"); err != nil {
+func main() {
+	if err := config.Load("config.json"); err != nil {
 		log.Fatal(err)
 	}
 
-	store := NewInMemoryStore("todo.db.json")
-	server := NewTodoServer(store)
+	//store := store.New()
+	store := new(struct{})
+	todoSevice := todo.NewTodoService(store)
+	server := server.New(todoSevice)
 
-	server.run()
+	server.Run()
 }

@@ -1,0 +1,58 @@
+package server
+
+import (
+	"fmt"
+	"just-do-it-2/config"
+	"just-do-it-2/internal/todo"
+	"log"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+)
+
+type TodoServer struct {
+	http.Server
+	todoService todo.TodoService
+}
+
+func New(ts *todo.TodoService) *TodoServer {
+	srv := new(TodoServer)
+
+	mux := http.NewServeMux()
+	mux.Handle("GET /hello", http.HandlerFunc(helloHandler))
+	mux.Handle("POST /todos", http.HandlerFunc(createTodoHandler))
+	mux.Handle("GET /todos", http.HandlerFunc(getAllTodoHandler))
+	mux.Handle("PATCH /todos/{id}", http.HandlerFunc(completeTodoHandler))
+	mux.Handle("DELETE /todos/{id}", http.HandlerFunc(deleteTodoHandler))
+	srv.Handler = mux
+
+	srv.Addr = *config.Address
+	srv.ReadTimeout = time.Duration(*config.ReadTimeout * int64(time.Second))
+	srv.WriteTimeout = time.Duration(*config.WriteTimeout * int64(time.Second))
+
+	srv.todoService = *ts
+
+	return srv
+}
+
+func (srv *TodoServer) Run() {
+	fmt.Printf("Server starting...")
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt)
+
+	go func() {
+		log.Fatal(srv.ListenAndServe())
+	}()
+
+	<-shutdown
+	slog.Info("server shutdown")
+	if err := srv.Close(); err != nil {
+		log.Fatalf("Server failed to shutdown gracefully: %v", err)
+	}
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Hello, World!")
+}

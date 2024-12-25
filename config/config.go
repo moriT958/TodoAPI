@@ -2,38 +2,43 @@ package config
 
 import (
 	"encoding/json"
-	"just-do-it/logger"
 	"os"
 	"sync"
 )
 
-type config struct {
-	Version string `json:"version"`
-	Address string `json:"address"`
-}
-
 var (
-	Cfg  *config
+	cfg  *config
 	once sync.Once
 )
 
-func InitConfig(cfgFile string) error {
-	once.Do(func() {
-		Cfg = new(config)
+type config struct {
+	Version      string `json:"Version"`
+	Address      string `json:"Address"`
+	ReadTimeout  int64  `json:"ReadTimeout"`
+	WriteTimeout int64  `json:"WriteTimeout"`
+}
 
+func Load(filename string) error {
+	once.Do(func() {
+		cfg = new(config)
 	})
 
-	file, err := os.Open(cfgFile)
+	file, err := os.Open(filename)
+	defer file.Close()
 	if err != nil {
-		logger.Log.Error(err.Error())
 		return err
 	}
-	defer file.Close()
 
-	if err := json.NewDecoder(file).Decode(&Cfg); err != nil {
-		logger.Log.Error(err.Error())
+	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
 		return err
 	}
 
 	return nil
 }
+
+var (
+	Version      = &cfg.Version
+	Address      = &cfg.Address
+	ReadTimeout  = &cfg.ReadTimeout
+	WriteTimeout = &cfg.WriteTimeout
+)
