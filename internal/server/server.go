@@ -20,11 +20,11 @@ func New(ts *todo.TodoService) *TodoServer {
 	srv := new(TodoServer)
 
 	mux := http.NewServeMux()
-	mux.Handle("GET /hello", http.HandlerFunc(srv.helloHandler))
-	mux.Handle("POST /todos", http.HandlerFunc(srv.createTodoHandler))
-	mux.Handle("GET /todos", http.HandlerFunc(srv.getAllTodoHandler))
-	mux.Handle("PATCH /todos/{id}", http.HandlerFunc(srv.completeTodoHandler))
-	mux.Handle("DELETE /todos/{id}", http.HandlerFunc(srv.deleteTodoHandler))
+	mux.Handle("GET /hello", http.HandlerFunc(srv.HelloHandler))
+	mux.Handle("POST /todos", http.HandlerFunc(srv.CreateTodoHandler))
+	mux.Handle("GET /todos", http.HandlerFunc(srv.GetAllTodoHandler))
+	mux.Handle("PATCH /todos/{id}", http.HandlerFunc(srv.CompleteTodoHandler))
+	mux.Handle("DELETE /todos/{id}", http.HandlerFunc(srv.DeleteTodoHandler))
 	srv.Handler = mux
 
 	srv.Addr = config.Address()
@@ -52,6 +52,6 @@ func (srv *TodoServer) Run() {
 	}
 }
 
-func (srv *TodoServer) helloHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *TodoServer) HelloHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello, World!")
 }

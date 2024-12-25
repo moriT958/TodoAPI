@@ -19,7 +19,7 @@ var (
 
 const jsonContentType = "application/json; charset=utf-8"
 
-func (srv *TodoServer) createTodoHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *TodoServer) CreateTodoHandler(w http.ResponseWriter, r *http.Request) {
 	var todoRequest TodoTitleRequest
 	if err := json.NewDecoder(r.Body).Decode(&todoRequest); err != nil {
 		http.Error(w, errParseRequest.Error(), http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func (srv *TodoServer) createTodoHandler(w http.ResponseWriter, r *http.Request)
 const todoOffsetNum = 0
 const todoLimitNum = 3
 
-func (srv *TodoServer) getAllTodoHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *TodoServer) GetAllTodoHandler(w http.ResponseWriter, r *http.Request) {
 	todos, err := srv.todoService.GetAllTodo(todoOffsetNum, todoLimitNum)
 	if err != nil {
 		http.Error(w, errGetData.Error(), http.StatusInternalServerError)
@@ -76,7 +76,7 @@ func (srv *TodoServer) getAllTodoHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (srv *TodoServer) completeTodoHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *TodoServer) CompleteTodoHandler(w http.ResponseWriter, r *http.Request) {
 	todoID := r.PathValue(PathValueID)
 
 	id, err := srv.todoService.CompleteTodo(todoID)
@@ -98,7 +98,7 @@ func (srv *TodoServer) completeTodoHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (srv *TodoServer) deleteTodoHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *TodoServer) DeleteTodoHandler(w http.ResponseWriter, r *http.Request) {
 	todoID := r.PathValue(PathValueID)
 
 	if err := srv.todoService.DeleteTodo(todoID); err != nil {
