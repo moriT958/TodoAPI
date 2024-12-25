@@ -99,3 +99,11 @@ func (s *TodoStore) DeleteByID(id string) bool {
 
 	return false
 }
+
+func (s *TodoStore) Count() int {
+	return s.count
+}
+
+func (s *TodoStore) Mem() []model.Todo {
+	return s.mem
+}
