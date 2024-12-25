@@ -3,6 +3,7 @@ package main
 import (
 	"just-do-it-2/config"
 	"just-do-it-2/internal/server"
+	"just-do-it-2/internal/store"
 	"just-do-it-2/internal/todo"
 	"log"
 	"log/slog"
@@ -19,8 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//store := store.New()
-	store := new(struct{})
+	store := store.New()
 	todoSevice := todo.NewTodoService(store)
 	server := server.New(todoSevice)
 

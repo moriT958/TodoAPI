@@ -10,6 +10,7 @@ import (
 var (
 	errParseResponse = errors.New("handler: failed to parse response")
 	errParseRequest  = errors.New("handler: failed to parse request")
+	errDeleteData    = errors.New("handler: failed to delete data")
 )
 
 const jsonContentType = "application/json; charset=utf-8"
@@ -37,11 +38,13 @@ func (srv *TodoServer) createTodoHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (srv *TodoServer) getAllTodoHandler(w http.ResponseWriter, r *http.Request) {
-	todos := srv.todoService.GetAllTodo(3)
+const maxTodoNum = 3
 
-	res := TodoListResponse{Todos: make([]TodoResponse, 3)}
-	for i := 0; i < 3; i++ {
+func (srv *TodoServer) getAllTodoHandler(w http.ResponseWriter, r *http.Request) {
+	todos := srv.todoService.GetAllTodo(maxTodoNum)
+
+	res := TodoListResponse{Todos: make([]TodoResponse, len(todos))}
+	for i := 0; i < len(todos); i++ {
 		res.Todos[i] = TodoResponse{
 			ID:        todos[i].ID,
 			Title:     todos[i].Title,
@@ -61,11 +64,10 @@ func (srv *TodoServer) getAllTodoHandler(w http.ResponseWriter, r *http.Request)
 func (srv *TodoServer) completeTodoHandler(w http.ResponseWriter, r *http.Request) {
 	todoID := r.PathValue(PathValueID)
 
-	// TODO:
-	// add complete todo logic here.
+	id := srv.todoService.CompleteTodo(todoID)
 
 	res := TodoIDResponse{
-		ID: todoID,
+		ID: id,
 	}
 	w.Header().Set("Content-Type", jsonContentType)
 	w.WriteHeader(http.StatusOK)
@@ -77,10 +79,13 @@ func (srv *TodoServer) completeTodoHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (srv *TodoServer) deleteTodoHandler(w http.ResponseWriter, r *http.Request) {
-	//todoID := r.PathValue(PathValueID)
+	todoID := r.PathValue(PathValueID)
 
-	// TODO:
-	// write delete todo logic here.
+	ok := srv.todoService.DeleteTodo(todoID)
+	if !ok {
+		http.Error(w, errParseResponse.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", jsonContentType)
 	w.WriteHeader(http.StatusOK)
