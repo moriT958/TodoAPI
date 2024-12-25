@@ -48,11 +48,11 @@ func createTodoHandler(w http.ResponseWriter, r *http.Request) {
 func getAllTodoHandler(w http.ResponseWriter, r *http.Request) {
 	res := TodoListResponse{Todos: make([]TodoResponse, 3)}
 	for i := 0; i < 3; i++ {
-		res.Todos = append(res.Todos, TodoResponse{
+		res.Todos[i] = TodoResponse{
 			ID:        fmt.Sprintf("test-id-%d", i),
 			Title:     fmt.Sprintf("test-title-%d", i),
 			Completed: fmt.Sprintf("test-completed-%d", i),
-		})
+		}
 	}
 
 	w.Header().Set("Content-Type", jsonContentType)

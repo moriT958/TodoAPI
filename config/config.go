@@ -19,26 +19,39 @@ type config struct {
 }
 
 func Load(filename string) error {
+	var err error
+
 	once.Do(func() {
 		cfg = new(config)
+
+		file, openErr := os.Open(filename)
+		if openErr != nil {
+			err = openErr
+			return
+		}
+		defer file.Close()
+
+		if decodeErr := json.NewDecoder(file).Decode(&cfg); decodeErr != nil {
+			err = decodeErr
+			return
+		}
 	})
 
-	file, err := os.Open(filename)
-	defer file.Close()
-	if err != nil {
-		return err
-	}
-
-	if err := json.NewDecoder(file).Decode(&cfg); err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-var (
-	Version      = &cfg.Version
-	Address      = &cfg.Address
-	ReadTimeout  = &cfg.ReadTimeout
-	WriteTimeout = &cfg.WriteTimeout
-)
+func Version() string {
+	return cfg.Version
+}
+
+func Address() string {
+	return cfg.Address
+}
+
+func ReadTimeout() int64 {
+	return cfg.ReadTimeout
+}
+
+func WriteTimeout() int64 {
+	return cfg.WriteTimeout
+}
