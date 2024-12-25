@@ -1,8 +1,10 @@
 package todo
 
 import (
-	"fmt"
+	"errors"
 	"just-do-it-2/internal/model"
+
+	"github.com/google/uuid"
 )
 
 type TodoService struct {
@@ -13,40 +15,34 @@ func NewTodoService(s model.ITodoStore) *TodoService {
 	return &TodoService{store: s}
 }
 
-func (ts *TodoService) CreateTodo(title string) model.Todo {
+func (ts *TodoService) CreateTodo(title string) (model.Todo, error) {
 	newTodo := model.Todo{
-		ID:        "test-uuid-1",
+		ID:        uuid.NewString(),
 		Title:     title,
 		Completed: false,
 	}
 	ts.store.Save(newTodo)
-	return newTodo
+	return newTodo, nil
 }
 
-func (ts *TodoService) GetAllTodo(num int) []model.Todo {
-	todos := make([]model.Todo, num)
-	todos = ts.store.GetAll(num)
-
-	for i := 0; i < num; i++ {
-		todos[i] = model.Todo{
-			ID:        fmt.Sprintf("test-id-%d", i),
-			Title:     fmt.Sprintf("test-title-%d", i),
-			Completed: false,
-		}
-	}
-	return todos
+func (ts *TodoService) GetAllTodo(offset, limit int) ([]model.Todo, error) {
+	todos := ts.store.GetAll(offset, limit)
+	return todos, nil
 }
 
-func (ts *TodoService) CompleteTodo(todoID string) string {
+func (ts *TodoService) CompleteTodo(todoID string) (string, error) {
 	todo := ts.store.FindByID(todoID)
+	if todo == (model.Todo{}) {
+		return "", errors.New("todo not exists")
+	}
 	todo.Completed = true
 	ts.store.Save(todo)
-	return todo.ID
+	return todo.ID, nil
 }
 
-func (ts *TodoService) DeleteTodo(todoID string) bool {
+func (ts *TodoService) DeleteTodo(todoID string) error {
 	if ok := ts.store.DeleteByID(todoID); ok {
-		return true
+		return nil
 	}
-	return false
+	return errors.New("failed to delete data")
 }

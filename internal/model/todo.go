@@ -16,7 +16,7 @@ func (t *Todo) CompletedStr() string {
 
 type ITodoStore interface {
 	Save(Todo)
-	GetAll(num int) []Todo
+	GetAll(offset, limit int) []Todo
 	FindByID(id string) Todo
 	DeleteByID(id string) bool
 }
