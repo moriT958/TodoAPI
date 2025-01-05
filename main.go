@@ -1,28 +1,18 @@
 package main
 
 import (
-	"just-do-it-2/config"
-	"just-do-it-2/internal/server"
-	"just-do-it-2/internal/store"
-	"just-do-it-2/internal/todo"
+	"database/sql"
 	"log"
-	"log/slog"
 	"os"
 )
 
-func init() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
-}
-
 func main() {
-	if err := config.Load("config.json"); err != nil {
+	dsn := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
-	store := store.New()
-	todoSevice := todo.NewTodoService(store)
-	server := server.New(todoSevice)
-
-	server.Run()
+	//store := store.NewTodoStore(db)
 }
