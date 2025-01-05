@@ -2,8 +2,8 @@
 -- +goose StatementBegin
 CREATE TABLE todos (
 	id serial NOT NULl,
-	uuid character(40) NOT NULL,
-	title character(30) NOT NULL,
+	uuid varchar(40) NOT NULL,
+	title varchar(30) NOT NULL,
 	is_completed boolean NOT NULL DEFAULT false,
 	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("id"),
