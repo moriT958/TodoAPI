@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"just-do-it-2/todo"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
@@ -114,6 +115,48 @@ func TestFindByID(t *testing.T) {
 		_, err := store.FindByID(ctx, id)
 		if err == nil {
 			t.Error("expected err occurs, but didn't")
+		}
+	})
+}
+
+func TestFindAll(t *testing.T) {
+	ctx := context.Background()
+
+	db, err := sql.Open("postgres", testDsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+
+	store := NewTodoStore(tx)
+
+	todos := []todo.Todo{
+		{ID: "test-uuid-1", Title: "test-todo-1", IsCompleted: false},
+		{ID: "test-uuid-2", Title: "test-todo-2", IsCompleted: true},
+		{ID: "test-uuid-3", Title: "test-todo-3", IsCompleted: false},
+	}
+
+	_, err = store.Set(ctx, todos[0])
+	_, err = store.Set(ctx, todos[1])
+	_, err = store.Set(ctx, todos[2])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("success find all todos", func(t *testing.T) {
+		tl, err := store.FindAll(ctx)
+		if err != nil {
+			t.Errorf("failed to get all: %q", err)
+		}
+
+		if !reflect.DeepEqual(tl, todos) {
+			t.Errorf("expected %v, got %v", todos, tl)
 		}
 	})
 }
