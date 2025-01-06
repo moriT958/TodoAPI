@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,7 +17,8 @@ type stubTodoStore struct{}
 var _ todo.ITodoStore = (*stubTodoStore)(nil)
 
 func (st *stubTodoStore) Set(ctx context.Context, todo todo.Todo) (string, error) {
-	return "FB6514BC-E78C-4570-B5A0-120DFFD9A56E", nil
+	id := "FB6514BC-E78C-4570-B5A0-120DFFD9A56E"
+	return id, nil
 }
 
 var testTodoNum = 3
@@ -104,7 +106,7 @@ func TestCompleteTodo(t *testing.T) {
 	svr := initMockServer()
 	defer svr.Close()
 
-	req, err := http.NewRequest(http.MethodGet, "/todos", nil)
+	req, err := http.NewRequest(http.MethodPatch, "/todos", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,9 +125,52 @@ func TestCompleteTodo(t *testing.T) {
 }
 
 func TestDeleteTodo(t *testing.T) {
+	svr := initMockServer()
+	defer svr.Close()
 
+	req, err := http.NewRequest(http.MethodDelete, "/todos", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.SetPathValue(PathValueID, "00C867A8-2202-44E1-9FB9-3023549B5A11")
+	res := httptest.NewRecorder()
+
+	t.Run("correctly deleted todo, returns 200", func(t *testing.T) {
+		svr.DeleteTodo(res, req)
+
+		want := http.StatusOK
+		got := res.Code
+		if want != got {
+			t.Errorf("status code expected %d, got %d", want, got)
+		}
+	})
 }
 
 func TestCreateTodo(t *testing.T) {
+	svr := initMockServer()
+	defer svr.Close()
 
+	reqSchema := ReqCreateTodo{
+		Title: "test-create-todo",
+	}
+	reqBody, err := json.Marshal(reqSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequest(http.MethodPost, "/todos", bytes.NewReader(reqBody))
+	res := httptest.NewRecorder()
+
+	t.Run("correctly create todo, returns id", func(t *testing.T) {
+		svr.CreateTodo(res, req)
+
+		want := RespCreateTodo{ID: "FB6514BC-E78C-4570-B5A0-120DFFD9A56E"}
+		var got RespCreateTodo
+		if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
+			t.Fatal(err)
+		}
+
+		if !reflect.DeepEqual(want, got) {
+			t.Errorf("response expected %v, got %v", want, got)
+		}
+	})
 }

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"just-do-it-2/todo"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 const Address = "127.0.0.1:8080"
@@ -77,9 +79,44 @@ func (s *TodoServer) CompleteTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *TodoServer) DeleteTodo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
+	id := r.PathValue(PathValueID)
+	if err := s.store.DeleteByID(ctx, id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", jsonContentType)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *TodoServer) CreateTodo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
+	var reqSchema ReqCreateTodo
+	if err := json.NewDecoder(r.Body).Decode(&reqSchema); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	newTodo := todo.Todo{
+		ID:          uuid.NewString(),
+		Title:       reqSchema.Title,
+		IsCompleted: false,
+	}
+
+	id, err := s.store.Set(ctx, newTodo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := RespCreateTodo{
+		ID: id,
+	}
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
