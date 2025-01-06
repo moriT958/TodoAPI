@@ -2,7 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"just-do-it-2/store"
+	"errors"
+	"just-do-it-2/todo"
 	"net/http"
 )
 
@@ -12,10 +13,10 @@ const jsonContentType = "application/json; charset=utf-8"
 
 type TodoServer struct {
 	http.Server
-	store store.TodoStore
+	store todo.ITodoStore
 }
 
-func NewTodoServer(s *store.TodoStore) *TodoServer {
+func NewTodoServer(s todo.ITodoStore) *TodoServer {
 	svr := new(TodoServer)
 	mux := http.NewServeMux()
 	mux.Handle("GET /todos", http.HandlerFunc(svr.GetAllTodos))
@@ -26,7 +27,7 @@ func NewTodoServer(s *store.TodoStore) *TodoServer {
 	svr.Addr = Address
 	svr.Handler = mux
 
-	svr.store = *s
+	svr.store = s
 	return svr
 }
 
@@ -56,7 +57,23 @@ func (s *TodoServer) GetAllTodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *TodoServer) CompleteTodo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
+	id := r.PathValue(PathValueID)
+	t, err := s.store.FindByID(ctx, id)
+	if (err != nil) || (t == todo.Todo{}) {
+		http.Error(w, errors.New("todo doesn't exist").Error(), http.StatusBadRequest)
+		return
+	}
+
+	t.IsCompleted = true
+	if _, err := s.store.Set(ctx, t); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", jsonContentType)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *TodoServer) DeleteTodo(w http.ResponseWriter, r *http.Request) {

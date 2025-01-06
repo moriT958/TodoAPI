@@ -12,9 +12,6 @@ type RespGetAllTodos struct {
 
 const PathValueID = "id"
 
-type RespCompleteTodo struct {
-}
-
 type RespDeleteTodo struct {
 }
 
