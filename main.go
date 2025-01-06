@@ -1,28 +1,24 @@
 package main
 
 import (
-	"just-do-it-2/config"
-	"just-do-it-2/internal/server"
-	"just-do-it-2/internal/store"
-	"just-do-it-2/internal/todo"
+	"database/sql"
+	_ "github.com/lib/pq"
+	"just-do-it-2/server"
+	"just-do-it-2/store"
 	"log"
-	"log/slog"
 	"os"
 )
 
-func init() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
-}
-
 func main() {
-	if err := config.Load("config.json"); err != nil {
+	dsn := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
-	store := store.New()
-	todoSevice := todo.NewTodoService(store)
-	server := server.New(todoSevice)
+	store := store.NewTodoStore(db)
+	svr := server.NewTodoServer(store)
 
-	server.Run()
+	log.Fatal(svr.ListenAndServe())
 }
