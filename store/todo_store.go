@@ -26,7 +26,8 @@ func (s *TodoStore) Set(ctx context.Context, todo todo.Todo) (string, error) {
 	}
 
 	if isExist {
-		if _, err := s.db.ExecContext(ctx, "UPDATE todos SET (title, is_completed) = ($1, $2);", todo.Title, todo.IsCompleted); err != nil {
+		if _, err := s.db.ExecContext(ctx, "UPDATE todos SET (title, is_completed) = ($1, $2) WHERE uuid = $3;",
+			todo.Title, todo.IsCompleted, todo.ID); err != nil {
 			return "", err
 		}
 		return todo.ID, nil

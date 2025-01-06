@@ -20,5 +20,5 @@ func main() {
 	store := store.NewTodoStore(db)
 	svr := server.NewTodoServer(store)
 
-	log.Fatal(svr.ListenAndServe())
+	svr.Run()
 }
