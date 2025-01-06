@@ -12,11 +12,10 @@ type RespGetAllTodos struct {
 
 const PathValueID = "id"
 
-type RespDeleteTodo struct {
-}
-
 type ReqCreateTodo struct {
+	Title string `json:"title"`
 }
 
 type RespCreateTodo struct {
+	ID string `json:"id"`
 }
