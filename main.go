@@ -2,6 +2,9 @@ package main
 
 import (
 	"database/sql"
+	_ "github.com/lib/pq"
+	"just-do-it-2/server"
+	"just-do-it-2/store"
 	"log"
 	"os"
 )
@@ -14,5 +17,8 @@ func main() {
 	}
 	defer db.Close()
 
-	//store := store.NewTodoStore(db)
+	store := store.NewTodoStore(db)
+	svr := server.NewTodoServer(store)
+
+	log.Fatal(svr.ListenAndServe())
 }
