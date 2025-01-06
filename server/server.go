@@ -9,7 +9,7 @@ import (
 	"os/signal"
 )
 
-const Address = "127.0.0.1:8080"
+const Address = "0.0.0.0:8080"
 
 type TodoServer struct {
 	http.Server
