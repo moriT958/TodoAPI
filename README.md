@@ -18,7 +18,12 @@ A simple todo api.
 
 ## How to start
 
-1. `docker compose up -d`: PostgreSQLサーバを起動.
-2. `export DATABASE_URL=...`: DBのDSNを指定.
-3. `goose up`: マイグレーションの実行
-4. `go run main.go`: 実行
+requirements: Docker desktop
+
+1. `make db-up`: DBの起動
+2. `make app-build`: Dockerイメージのビルド
+3. `make app-run`: Dockerコンテナの起動
+
+- `make app-down`: apiの終了
+- `make db-down`: DBの終了
+- `make db-migrate`: DB初回起動後に実行(要goose)
