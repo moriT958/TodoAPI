@@ -1,4 +1,4 @@
-# Just Do It
+# TodoAPI
 
 A simple todo api.
 
